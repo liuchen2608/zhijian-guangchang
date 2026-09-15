@@ -12,7 +12,7 @@ export function startApp() {
   root.innerHTML = `<main class="studio"><canvas id="stage" aria-label="交互式三维光束粒子舞台"></canvas><div class="ambient"></div>
  <header><a class="brand" href="./" aria-label="指尖光场首页"><span class="brand-mark">╱</span><span>LUMEN<span class="brand-cn">指尖光场</span></span></a><div class="top-center"><span class="tiny-dot"></span> 实时光场实验 <span class="sep">/</span> 01</div><button id="fullscreen" class="icon-button" aria-label="进入全屏" title="全屏">⛶</button></header>
  <section class="intro"><div class="eyebrow">LIGHT, AT YOUR FINGERTIPS</div><h1>让光，随你而动。</h1><p id="intro-text">伸出手指，牵引一束属于你的光。</p></section>
- <aside class="controls panel" aria-label="光场控制"><div class="panel-heading"><span>控制光场</span><span class="micro">LIVE</span></div><div class="source-tabs" aria-label="输入方式"><button id="source-camera" class="selected">摄像头</button><button id="source-mouse">鼠标演示</button></div><button id="camera-toggle" class="primary"><span>◎</span> 启用摄像头</button><p class="privacy">画面仅在本机处理，不录制、不上传</p><div class="divider"></div><label class="range-label" for="sensitivity">响应灵敏度 <output id="sensitivity-value">1.0×</output></label><input id="sensitivity" type="range" min="0.5" max="2" step="0.1" value="1"/><label class="range-label" for="quality">粒子精度</label><select id="quality"><option value="standard">标准 · 8,000 粒子</option><option value="low">轻量 · 4,000 粒子</option></select><button id="calibrate" class="secondary" disabled>重新校准纵深</button><p id="calibration-note" class="hint">张开手掌、正对镜头，建立空间参考</p><div class="divider"></div><div class="mode-heading"><span class="tiny-dot" id="status-dot"></span><span id="status" role="status" aria-live="polite">自动演示中</span></div><p id="status-detail" class="hint">点击启用，开始与光互动</p><p id="error" role="alert" hidden></p></aside>
+ <aside class="controls panel" aria-label="光场控制"><div class="panel-heading"><span>控制光场</span><span class="micro">LIVE</span></div><div class="source-tabs" aria-label="输入方式"><button id="source-camera" class="selected">摄像头</button><button id="source-mouse">鼠标演示</button></div><button id="camera-toggle" class="primary"><span>◎</span> 启用摄像头</button><p class="privacy">画面仅在本机处理，不录制、不上传</p><div class="divider"></div><label class="range-label" for="sensitivity">响应灵敏度 <output id="sensitivity-value">1.0×</output></label><input id="sensitivity" type="range" min="0.5" max="2" step="0.1" value="1"/><label class="range-label" for="quality">粒子精度</label><select id="quality"><option value="standard">标准 · 8,000 粒子</option><option value="low">轻量 · 4,000 粒子</option></select><button id="calibrate" class="secondary" disabled>重新校准纵深</button><p id="calibration-note" class="hint">张开手掌、正对镜头，建立空间参考</p><div class="divider"></div><div class="mode-heading"><span class="tiny-dot" id="status-dot"></span><span id="status" role="status" aria-live="polite">自动演示中</span></div><p id="status-detail" class="hint">点击启用，开始与光互动</p><p id="error" role="alert" hidden></p><details id="camera-help" class="hint" hidden><summary>摄像头权限恢复步骤</summary><ol><li>在 Chrome 或 Safari 中直接打开本页，避免聊天软件内嵌预览。</li><li>点击地址栏的网站设置，将摄像头改为“允许”。</li><li>Mac：系统设置 → 隐私与安全性 → 摄像头，允许当前浏览器。Windows：设置 → 隐私和安全性 → 摄像头，允许桌面应用访问。</li><li>修改系统权限后重启浏览器，再点击“启用摄像头”；也可先使用“鼠标演示”。</li></ol><a id="camera-open" target="_blank" rel="noopener noreferrer">在新标签页打开演示</a></details></aside>
  <div class="center-label" aria-hidden="true"><span class="cross">+</span><span>PARTICLE FIELD</span><span class="label-line"></span></div>
  <section class="preview panel" aria-label="摄像头预览"><div class="preview-heading"><span>你的手势</span><button id="preview-toggle" aria-expanded="true">收起</button></div><div id="preview-body"><div class="video-box"><video id="video" muted playsinline></video><canvas id="skeleton"></canvas><div id="preview-empty"><span class="hand-outline">✧</span><span>等待摄像头连接</span></div><span class="video-corner tl"></span><span class="video-corner br"></span></div><div class="preview-footer"><span class="tiny-dot"></span><span id="device-state">摄像头未开启</span></div></div></section>
  <div class="field-meta"><span id="gesture-label">自由流动</span><span class="field-coordinates" id="coordinates">X 0.00 · Y 0.00 · Z 0.00</span></div>
@@ -70,7 +70,18 @@ export function startApp() {
     scatter: "粒子分散",
   };
   const messages: Record<string, string> = {
-    NotAllowedError: "摄像头未获授权。请在浏览器地址栏检查权限后重试。",
+    NotAllowedError:
+      "摄像头未获授权。请检查网站权限和系统设置中的摄像头权限，再点击启用摄像头。",
+    CAMERA_POLICY_BLOCKED:
+      window.self !== window.top
+        ? "内嵌预览的页面权限策略禁止摄像头。请在独立浏览器标签页打开演示，再允许摄像头。"
+        : "当前页面权限策略禁止摄像头，单独修改网站授权无法解除。请暂用鼠标演示，并反馈此提示以检查托管配置。",
+    CAMERA_INSECURE_CONTEXT:
+      "当前连接不支持摄像头。请使用 HTTPS 演示链接，或在本机 localhost 打开。",
+    CAMERA_UNSUPPORTED:
+      "当前浏览器未提供摄像头接口，请在最新版 Chrome 或 Safari 中打开。",
+    CAMERA_PLAYBACK_BLOCKED:
+      "摄像头已获授权，但视频播放被浏览器阻止。请检查自动播放设置后重试。",
     NotFoundError: "没有找到摄像头，请连接设备后重试。",
     NotReadableError: "摄像头无法打开，可能正被其他应用占用。",
     MODEL_LOAD_FAILED: "识别模型加载失败，请检查本地模型资源后重试。",
@@ -81,7 +92,12 @@ export function startApp() {
       "浏览器无法创建 3D 画面。请启用硬件加速或更换支持 WebGL 的浏览器。",
     WEBGL_CONTEXT_LOST: "图形连接暂时中断，正在等待恢复。",
   };
+  $<HTMLAnchorElement>("camera-open").href = window.location.href;
   function showError(code: string) {
+    $("camera-help").hidden = !(
+      code.startsWith("CAMERA_") ||
+      ["NotAllowedError", "NotFoundError", "NotReadableError"].includes(code)
+    );
     $("error").hidden = false;
     $("error").textContent =
       messages[code] ?? "设备暂时无法使用，请重试或切换鼠标演示。";
@@ -174,6 +190,7 @@ export function startApp() {
     $("source-camera").classList.add("selected");
     $("source-mouse").classList.remove("selected");
     $("error").hidden = true;
+    $("camera-help").hidden = true;
     $("camera-toggle").textContent = "取消启动";
     setStatus("等待授权", "请允许浏览器使用摄像头");
     try {
@@ -215,6 +232,7 @@ export function startApp() {
     stop();
     source = "mouse";
     $("error").hidden = true;
+    $("camera-help").hidden = true;
     $("source-camera").classList.remove("selected");
     $("source-mouse").classList.add("selected");
     setStatus("鼠标演示中", "在光场移动鼠标；按住聚合，使用下方按钮切换效果");
@@ -363,6 +381,7 @@ export function startApp() {
     lostContext = false;
     if (scene) {
       $("error").hidden = true;
+      $("camera-help").hidden = true;
       setStatus("画面已恢复", "可重新启用摄像头");
     }
   });

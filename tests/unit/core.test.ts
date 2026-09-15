@@ -149,6 +149,8 @@ describe("摄像头与设置", () => {
   it("关闭后迟到的摄像头授权不会泄漏轨道", async () => {
     let release!: (v: MediaStream) => void;
     const stop = vi.fn();
+    vi.stubGlobal("window", { isSecureContext: true });
+    vi.stubGlobal("document", {});
     vi.stubGlobal("navigator", {
       mediaDevices: {
         getUserMedia: () => new Promise<MediaStream>((r) => (release = r)),
@@ -195,6 +197,8 @@ function testLatePlay() {
     const oldStream = {
       getTracks: () => [{ stop: oldStop }],
     } as unknown as MediaStream;
+    vi.stubGlobal("window", { isSecureContext: true });
+    vi.stubGlobal("document", {});
     const newStream = {
       getTracks: () => [{ stop: newStop }],
     } as unknown as MediaStream;

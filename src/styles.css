@@ -180,6 +180,20 @@ p {
   top: 152px;
   width: 264px;
   padding: 22px;
+  max-height: calc(100dvh - 280px);
+  overflow-y: auto;
+}
+#camera-help summary {
+  cursor: pointer;
+}
+#camera-help ol {
+  padding-left: 18px;
+}
+#camera-help li {
+  margin: 8px 0;
+}
+#camera-help a {
+  color: #a6d8ff;
 }
 .panel-heading {
   font-size: 15px;
