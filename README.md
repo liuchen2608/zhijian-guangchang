@@ -7,7 +7,7 @@
 已安装依赖的本机：
 
 ```bash
-cd /Users/m4air/Desktop/手指交互/finger-light
+# 在项目目录打开终端
 npm run dev
 ```
 
